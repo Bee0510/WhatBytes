@@ -463,6 +463,11 @@ class _SwipeableTask extends StatelessWidget {
   Widget build(BuildContext context) {
     final cs = Theme.of(context).colorScheme;
 
+    // ✅ Capture stable references up-front
+    final bloc = context.read<TaskBloc>();
+    final messenger = ScaffoldMessenger.of(context);
+    final router = GoRouter.of(context);
+
     Widget bg(Color c, AlignmentGeometry align, IconData icon, String label) {
       return Container(
         alignment: align,
@@ -495,23 +500,23 @@ class _SwipeableTask extends StatelessWidget {
       ),
       confirmDismiss: (direction) async {
         if (direction == DismissDirection.startToEnd) {
-          GoRouter.of(context).push('/task/edit?id=${task.id}');
+          // ✅ Use captured router, not context lookup later
+          router.push('/task/edit?id=${task.id}');
           return false; // don’t remove on edit swipe
         }
         return direction == DismissDirection.endToStart;
       },
       onDismissed: (_) {
         final deleted = task;
-        context.read<TaskBloc>().add(DeleteTaskPressed(task.id));
-        ScaffoldMessenger.of(context).clearSnackBars();
-        ScaffoldMessenger.of(context).showSnackBar(
+        // ✅ Use captured bloc/messenger, not context.read/of inside SnackBarAction
+        bloc.add(DeleteTaskPressed(task.id));
+        messenger.clearSnackBars();
+        messenger.showSnackBar(
           SnackBar(
             content: const Text('Task deleted'),
             action: SnackBarAction(
               label: 'UNDO',
-              onPressed:
-                  () =>
-                      context.read<TaskBloc>().add(CreateTaskPressed(deleted)),
+              onPressed: () => bloc.add(CreateTaskPressed(deleted)),
             ),
           ),
         );

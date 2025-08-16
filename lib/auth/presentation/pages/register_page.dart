@@ -41,7 +41,11 @@ class _RegisterPageState extends State<RegisterPage> {
               );
             } else if (errorMessage.contains('email-already-in-use')) {
               ToastUtils.showCustomToast(
-                'Incorrect password. Please try again.',
+                'This email is already registered. Please log in.',
+              );
+            } else if (errorMessage.contains('network error')) {
+              ToastUtils.showCustomToast(
+                'Network error. Please check your connection.',
               );
             } else if (errorMessage.contains('weak-password')) {
               ToastUtils.showCustomToast(

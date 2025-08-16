@@ -37,7 +37,6 @@ class GreetingBannerState extends State<GreetingBanner>
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    final cs = theme.colorScheme;
 
     final now = DateTime.now();
     final hour = now.hour;
@@ -52,7 +51,7 @@ class GreetingBannerState extends State<GreetingBanner>
       accent = Colors.amberAccent;
     } else if (hour >= 12 && hour < 18) {
       greet = 'Good afternoon';
-      icon = Icons.wb_twilight_rounded; // sun lower in sky
+      icon = Icons.wb_twilight_rounded;
       accent = Colors.orangeAccent;
     } else {
       greet = 'Good evening';
@@ -60,7 +59,6 @@ class GreetingBannerState extends State<GreetingBanner>
       accent = Colors.indigoAccent;
     }
 
-    // small helper for time string
     String _time() {
       final h = now.hour % 12 == 0 ? 12 : now.hour % 12;
       final m = now.minute.toString().padLeft(2, '0');
@@ -77,7 +75,6 @@ class GreetingBannerState extends State<GreetingBanner>
       padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
       child: Row(
         children: [
-          // Animated icon chip
           Container(
             width: 44,
             height: 44,
@@ -96,8 +93,7 @@ class GreetingBannerState extends State<GreetingBanner>
             child: AnimatedBuilder(
               animation: _spin,
               builder: (_, __) {
-                final turns =
-                    0.02 * math.sin(_spin.value * 2 * math.pi); // gentle sway
+                final turns = 0.02 * math.sin(_spin.value * 2 * math.pi);
                 return AnimatedRotation(
                   turns: turns,
                   duration: const Duration(milliseconds: 300),
@@ -108,7 +104,6 @@ class GreetingBannerState extends State<GreetingBanner>
           ),
           const SizedBox(width: 12),
 
-          // Greeting + subtext
           Expanded(
             child: AnimatedSwitcher(
               duration: const Duration(milliseconds: 300),
@@ -131,7 +126,7 @@ class GreetingBannerState extends State<GreetingBanner>
                         ? 'Let’s plan a productive day.'
                         : (hour < 18
                             ? 'Keep the momentum going.'
-                            : 'Wrap up what matters most.'),
+                            : 'Wrap up important tasks.'),
                     style: theme.textTheme.bodySmall?.copyWith(
                       color: Colors.white.withOpacity(.85),
                     ),

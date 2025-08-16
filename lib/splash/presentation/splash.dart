@@ -1,11 +1,8 @@
 import 'dart:async';
 import 'dart:math' as math;
 import 'package:flutter/material.dart';
-import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
-
 import 'package:whatbytes/core/theme/app_color.dart';
-import 'package:whatbytes/auth/presentation/bloc/auth_bloc.dart';
 
 class SplashPage extends StatefulWidget {
   const SplashPage({super.key});
@@ -15,8 +12,8 @@ class SplashPage extends StatefulWidget {
 }
 
 class _SplashPageState extends State<SplashPage> with TickerProviderStateMixin {
-  late final AnimationController _bg; // gradient drift (loops)
-  late final AnimationController _reveal; // logo + burst timeline
+  late final AnimationController _bg;
+  late final AnimationController _reveal;
   Timer? _routeTimer;
 
   @override
@@ -33,7 +30,6 @@ class _SplashPageState extends State<SplashPage> with TickerProviderStateMixin {
       duration: const Duration(milliseconds: 1800),
     )..forward();
 
-    // Auto navigate after a short delight window (can still tap to skip)
     _routeTimer = Timer(const Duration(milliseconds: 2200), _goNext);
   }
 
@@ -48,7 +44,7 @@ class _SplashPageState extends State<SplashPage> with TickerProviderStateMixin {
   void _goNext() {
     if (!mounted) return;
 
-    context.go('/'); // home
+    context.go('/');
   }
 
   @override
@@ -56,12 +52,11 @@ class _SplashPageState extends State<SplashPage> with TickerProviderStateMixin {
     final cs = Theme.of(context).colorScheme;
 
     return GestureDetector(
-      onTap: _goNext, // tap to skip
+      onTap: _goNext,
       child: Scaffold(
         body: Stack(
           fit: StackFit.expand,
           children: [
-            // ---------- Animated Gradient Background ----------
             AnimatedBuilder(
               animation: _bg,
               builder: (_, __) {
@@ -84,16 +79,15 @@ class _SplashPageState extends State<SplashPage> with TickerProviderStateMixin {
               },
             ),
 
-            // ---------- Centerpiece: logo reveal + confetti ----------
             Center(
               child: AnimatedBuilder(
                 animation: _reveal,
                 builder: (context, _) {
                   final t = Curves.easeOutBack.transform(
                     (_reveal.value).clamp(0, .7) / .7,
-                  ); // 0..0.7 segment for logo bounce
+                  );
                   final scale = 0.8 + 0.2 * t;
-                  final rot = (1 - t) * .08; // small tilt-in
+                  final rot = (1 - t) * .08;
 
                   return Stack(
                     alignment: Alignment.center,
@@ -113,7 +107,6 @@ class _SplashPageState extends State<SplashPage> with TickerProviderStateMixin {
                           ],
                         ),
                       ),
-                      // Confetti burst: runs from 0.3..1.0 of timeline
                       IgnorePointer(
                         child: SizedBox(
                           width: 220,
@@ -181,7 +174,6 @@ class _SplashPageState extends State<SplashPage> with TickerProviderStateMixin {
               ),
             ),
 
-            // ---------- App name fade-in ----------
             Align(
               alignment: Alignment(0, .55),
               child: AnimatedBuilder(
@@ -217,32 +209,6 @@ class _SplashPageState extends State<SplashPage> with TickerProviderStateMixin {
                 },
               ),
             ),
-
-            // ---------- Skip hint ----------
-            Positioned(
-              bottom: 24 + MediaQuery.of(context).padding.bottom,
-              left: 0,
-              right: 0,
-              child: Center(
-                child: DecoratedBox(
-                  decoration: BoxDecoration(
-                    color: Colors.white.withOpacity(.10),
-                    borderRadius: BorderRadius.circular(20),
-                    border: Border.all(color: Colors.white.withOpacity(.14)),
-                  ),
-                  child: const Padding(
-                    padding: EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-                    child: Text(
-                      'Tap to skip',
-                      style: TextStyle(
-                        color: Colors.white,
-                        fontWeight: FontWeight.w600,
-                      ),
-                    ),
-                  ),
-                ),
-              ),
-            ),
           ],
         ),
       ),
@@ -250,7 +216,6 @@ class _SplashPageState extends State<SplashPage> with TickerProviderStateMixin {
   }
 }
 
-// =============== Confetti burst painter ===============
 class _ConfettiBurstPainter extends CustomPainter {
   final double progress; // 0..1
   final Color baseColor;
@@ -263,15 +228,13 @@ class _ConfettiBurstPainter extends CustomPainter {
 
     final center = Offset(size.width / 2, size.height / 2);
     final radius = size.shortestSide * .45 * Curves.easeOut.transform(progress);
-    final rnd = math.Random(7); // deterministic for consistent look
+    final rnd = math.Random(7);
 
-    // Draw ~28 pieces flying outward with slight rotation
     for (int i = 0; i < 28; i++) {
       final ang = (i / 28.0) * 2 * math.pi + rnd.nextDouble() * .2;
       final dist = radius * (0.75 + rnd.nextDouble() * .35);
       final pos = center + Offset(math.cos(ang), math.sin(ang)) * dist;
 
-      // vary sizes/colors
       final sz = 4.0 + rnd.nextDouble() * 6.0;
       final hue = i % 4;
       final c = switch (hue) {

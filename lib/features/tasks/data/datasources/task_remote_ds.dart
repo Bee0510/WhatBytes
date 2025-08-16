@@ -1,4 +1,5 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:whatbytes/core/utils/toast.dart';
 import '../../domain/entities/task_entity.dart';
 import '../models/task_model.dart';
 
@@ -30,16 +31,39 @@ class TaskRemoteDataSourceImpl implements TaskRemoteDataSource {
   @override
   Future<void> create(String uid, TaskEntity task) async {
     final m = TaskModel.fromEntity(task);
-    await _col(uid).doc(m.id).set(m.toJson());
+    await _col(uid)
+        .doc(m.id)
+        .set(m.toJson())
+        .then(
+          (value) => ToastUtils.showCustomToast('Task created successfully!'),
+        )
+        .catchError(
+          (error) =>
+              ToastUtils.showCustomToast('Failed to create task: $error'),
+        );
   }
 
   @override
   Future<void> update(String uid, TaskEntity task) async {
     final m = TaskModel.fromEntity(task);
-    await _col(uid).doc(m.id).update(m.toJson());
+    await _col(uid)
+        .doc(m.id)
+        .update(m.toJson())
+        .then(
+          (value) => ToastUtils.showCustomToast('Task updated successfully!'),
+        )
+        .catchError(
+          (error) =>
+              ToastUtils.showCustomToast('Failed to update task: $error'),
+        );
   }
 
   @override
-  Future<void> delete(String uid, String taskId) =>
-      _col(uid).doc(taskId).delete();
+  Future<void> delete(String uid, String taskId) => _col(uid)
+      .doc(taskId)
+      .delete()
+      .then((value) => ToastUtils.showCustomToast('Task deleted successfully!'))
+      .catchError(
+        (error) => ToastUtils.showCustomToast('Failed to delete task: $error'),
+      );
 }

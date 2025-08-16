@@ -153,8 +153,46 @@ class AuthShell extends StatelessWidget {
   }
 }
 
-class _AuthHeader extends StatelessWidget {
-  const _AuthHeader();
+// replace your current _AuthHeader with this animated version
+class _AuthHeader extends StatefulWidget {
+  const _AuthHeader({super.key});
+
+  @override
+  State<_AuthHeader> createState() => _AuthHeaderState();
+}
+
+class _AuthHeaderState extends State<_AuthHeader>
+    with TickerProviderStateMixin {
+  late final AnimationController _bob; // bob + tilt
+  late final AnimationController _ring; // orbit dots
+  late final AnimationController _sheen; // diagonal shine sweep
+
+  @override
+  void initState() {
+    super.initState();
+    _bob = AnimationController(
+      vsync: this,
+      duration: const Duration(seconds: 2),
+    )..repeat(reverse: true);
+
+    _ring = AnimationController(
+      vsync: this,
+      duration: const Duration(seconds: 8),
+    )..repeat();
+
+    _sheen = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 2200),
+    )..repeat();
+  }
+
+  @override
+  void dispose() {
+    _bob.dispose();
+    _ring.dispose();
+    _sheen.dispose();
+    super.dispose();
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -162,53 +200,156 @@ class _AuthHeader extends StatelessWidget {
     final box = MediaQuery.of(context).size.width * 0.25; // square size
     final r = box * 0.62; // ring radius for dots
 
-    return SizedBox(
-      width: box * 1.6,
-      height: box * 1.6, // give room for dots
-      child: Stack(
-        alignment: Alignment.center,
-        children: [
-          // square icon
-          Container(
-            width: box,
-            height: box,
-            decoration: BoxDecoration(
-              color: AppColor.primary,
-              borderRadius: BorderRadius.circular(box * 0.19),
-            ),
-            child: const Icon(
-              Icons.check_rounded,
-              color: Colors.white,
-              size: 60,
-            ),
-          ),
+    return AnimatedBuilder(
+      animation: Listenable.merge([_bob, _ring, _sheen]),
+      builder: (context, _) {
+        final tBob = _bob.value * 2 * math.pi;
+        final y = math.sin(tBob) * 6; // bob amount
+        final tilt = math.sin(tBob) * 0.06; // ~3.4°
+        final glow = 0.22 + 0.10 * math.sin(tBob).abs();
 
-          // confetti dots positioned relatively (angle in degrees)
-          _dotPolar(
-            angleDeg: 25,
-            radius: r,
-            size: box * 0.075,
-            color: cs.tertiary,
+        final rot = _ring.value * 2 * math.pi; // orbit angle
+        final pulse = 1 + 0.03 * math.sin(rot); // subtle radius pulse
+
+        return SizedBox(
+          width: box * 1.6,
+          height: box * 1.6,
+          child: Stack(
+            alignment: Alignment.center,
+            children: [
+              // --- main tile with bob + tilt + glow ---
+              Transform.translate(
+                offset: Offset(0, y),
+                child: Transform.rotate(
+                  angle: tilt,
+                  child: Stack(
+                    alignment: Alignment.center,
+                    children: [
+                      // glow halo
+                      Container(
+                        width: box + 28,
+                        height: box + 28,
+                        decoration: BoxDecoration(
+                          shape: BoxShape.circle,
+                          boxShadow: [
+                            BoxShadow(
+                              color: AppColor.primary.withOpacity(glow),
+                              blurRadius: 36,
+                              spreadRadius: 6,
+                            ),
+                          ],
+                        ),
+                      ),
+                      // tile + sheen + icon
+                      Container(
+                        width: box,
+                        height: box,
+                        decoration: BoxDecoration(
+                          color: AppColor.primary,
+                          borderRadius: BorderRadius.circular(box * 0.19),
+                          boxShadow: [
+                            BoxShadow(
+                              color: Colors.black.withOpacity(.15),
+                              blurRadius: 18,
+                              offset: const Offset(0, 10),
+                            ),
+                          ],
+                        ),
+                        child: Stack(
+                          children: [
+                            const Center(
+                              child: Icon(
+                                Icons.check_rounded,
+                                color: Colors.white,
+                                size: 60,
+                              ),
+                            ),
+                            // diagonal sheen sweep
+                            Positioned.fill(
+                              child: ClipRRect(
+                                borderRadius: BorderRadius.circular(box * 0.19),
+                                child: Transform(
+                                  alignment: Alignment.center,
+                                  transform:
+                                      Matrix4.identity()
+                                        ..translate(
+                                          // move the sheen left->right
+                                          ((_sheen.value * 2 - 0.5) *
+                                              (box * 1.2)),
+                                        )
+                                        ..rotateZ(-0.6),
+                                  child: Container(
+                                    width: box * 0.7,
+                                    decoration: BoxDecoration(
+                                      gradient: LinearGradient(
+                                        colors: [
+                                          Colors.white.withOpacity(0),
+                                          Colors.white.withOpacity(.25),
+                                          Colors.white.withOpacity(0),
+                                        ],
+                                        begin: Alignment.centerLeft,
+                                        end: Alignment.centerRight,
+                                      ),
+                                    ),
+                                  ),
+                                ),
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+
+              // --- orbiting confetti dots (animated) ---
+              _dotAt(
+                angle: _deg(25) + rot,
+                radius: r * pulse,
+                size: box * 0.075,
+                color: cs.tertiary,
+              ),
+              _dotAt(
+                angle: _deg(155) + rot,
+                radius: r * pulse,
+                size: box * 0.095,
+                color: cs.primary,
+              ),
+              _dotAt(
+                angle: _deg(230) + rot,
+                radius: r * 0.88 * pulse,
+                size: box * 0.065,
+                color: cs.secondary,
+              ),
+              _dotAt(
+                angle: _deg(335) + rot,
+                radius: r * 0.92 * pulse,
+                size: box * 0.085,
+                color: cs.error,
+              ),
+            ],
           ),
-          _dotPolar(
-            angleDeg: 155,
-            radius: r,
-            size: box * 0.095,
-            color: cs.primary,
-          ),
-          _dotPolar(
-            angleDeg: 230,
-            radius: r * 0.88,
-            size: box * 0.065,
-            color: cs.secondary,
-          ),
-          _dotPolar(
-            angleDeg: 335,
-            radius: r * 0.92,
-            size: box * 0.085,
-            color: cs.error,
-          ),
-        ],
+        );
+      },
+    );
+  }
+
+  // helpers
+  double _deg(double d) => d * math.pi / 180.0;
+
+  Widget _dotAt({
+    required double angle,
+    required double radius,
+    required double size,
+    required Color color,
+  }) {
+    return Transform.translate(
+      offset: Offset(radius * math.cos(angle), radius * math.sin(angle)),
+      child: Container(
+        width: size,
+        height: size,
+        decoration: BoxDecoration(color: color, shape: BoxShape.circle),
       ),
     );
   }

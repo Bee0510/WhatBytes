@@ -35,15 +35,15 @@ class _LoginPageState extends State<LoginPage> {
                 'The email address is not valid. Please check and try again.',
               );
             } else if (errorMessage.contains('invalid-credential')) {
-              ToastUtils.showCustomToast(
-                'No user found with this email. Please register first.',
-              );
+              ToastUtils.showCustomToast('Invalid credentials');
             } else if (errorMessage.contains('wrong-password')) {
               ToastUtils.showCustomToast(
                 'Incorrect password. Please try again.',
               );
-            } else {
-              ToastUtils.showCustomToast('Login failed: $errorMessage');
+            } else if (errorMessage.contains('network error')) {
+              ToastUtils.showCustomToast(
+                'Network error. Please check your connection.',
+              );
             }
           }
           if (state is Authenticated) {
@@ -90,22 +90,22 @@ class _LoginPageState extends State<LoginPage> {
                       onForgotPassword: () async {
                         final email = _email.text.trim();
                         if (email.isEmpty) {
-                          ScaffoldMessenger.of(context).showSnackBar(
-                            const SnackBar(
-                              content: Text('Enter your email first'),
-                            ),
-                          );
+                          if (!email.contains('@') ||
+                              !email.contains('.') ||
+                              email.length < 5) {
+                            ToastUtils.showCustomToast(
+                              'Please enter a valid email to reset password.',
+                            );
+                          } else {
+                            ToastUtils.showCustomToast(
+                              'Please enter your email to reset password.',
+                            );
+                          }
                           return;
                         }
                         try {
-                          // If you’re using FirebaseAuth:
-                          // await FirebaseAuth.instance.sendPasswordResetEmail(email: email);
-                          ScaffoldMessenger.of(context).showSnackBar(
-                            SnackBar(
-                              content: Text(
-                                'Password reset email sent to $email',
-                              ),
-                            ),
+                          ToastUtils.showCustomToast(
+                            'Password reset email sent to $email',
                           );
                         } catch (e) {
                           ScaffoldMessenger.of(context).showSnackBar(
